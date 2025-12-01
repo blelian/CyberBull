@@ -10,7 +10,8 @@ export default function DecryptPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const apiProxyBase = "/api/proxy/cpp"; // use proxy route
+  const api = process.env.NEXT_PUBLIC_CPP_BACKEND;
+  if (!api) console.error("NEXT_PUBLIC_CPP_BACKEND not set!");
 
   function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
     const paste = e.clipboardData.getData("text");
@@ -29,8 +30,14 @@ export default function DecryptPage() {
     setResult(null);
     setLoading(true);
 
+    if (!api) {
+      setError("Backend API URL not configured.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`${apiProxyBase}/decrypt`, {
+      const res = await fetch(`${api}/decrypt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

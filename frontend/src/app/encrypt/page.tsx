@@ -8,7 +8,8 @@ export default function EncryptPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const apiProxyBase = "/api/proxy/cpp"; // use proxy route
+  const api = process.env.NEXT_PUBLIC_CPP_BACKEND;
+  if (!api) console.error("NEXT_PUBLIC_CPP_BACKEND not set!");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -16,8 +17,14 @@ export default function EncryptPage() {
     setResult(null);
     setLoading(true);
 
+    if (!api) {
+      setError("Backend API URL not configured.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`${apiProxyBase}/encrypt`, {
+      const res = await fetch(`${api}/encrypt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: key.trim(), data: data.trim() }),

@@ -8,19 +8,19 @@ export default function SnifferPage() {
   const [packets, setPackets] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const api = process.env.NEXT_PUBLIC_PY_BACKEND || "";
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setPackets([]);
     setLoading(true);
-
     try {
-      const res = await fetch(`/api/proxy/py/sniff`, {
+      const res = await fetch(`${api}/sniff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ interface: iface, packet_count: count }),
       });
-
       if (!res.ok) throw new Error(await res.text() || `${res.status}`);
       const json = await res.json();
       setPackets(json.packets || []);
@@ -41,12 +41,20 @@ export default function SnifferPage() {
         <input type="number" value={count} onChange={(e) => setCount(Number(e.target.value))} min={1} max={1000} />
 
         <div className="flex flex-wrap gap-4">
-          <button type="submit" className="btn-primary" disabled={loading}>{loading ? "Sniffing..." : "Sniff"}</button>
-          <button type="button" className="btn-ghost" onClick={() => { setIface(""); setCount(10); setPackets([]); setError(null); }}>Reset</button>
+          <button type="submit" className="btn-primary" disabled={loading}>
+            {loading ? "Sniffing..." : "Sniff"}
+          </button>
+          <button type="button" className="btn-ghost" onClick={() => { setIface(""); setCount(10); setPackets([]); setError(null); }}>
+            Reset
+          </button>
         </div>
 
         {error && <div className="text-red-400 font-medium">{error}</div>}
-        {packets.length > 0 && <div className="bg-black/20 p-4 rounded-lg break-words"><pre className="text-sm">{JSON.stringify(packets, null, 2)}</pre></div>}
+        {packets.length > 0 && (
+          <div className="bg-black/20 p-4 rounded-lg break-words">
+            <pre className="text-sm">{JSON.stringify(packets, null, 2)}</pre>
+          </div>
+        )}
       </form>
     </section>
   );
