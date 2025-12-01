@@ -2,30 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Theme tokens (Option A — Neon Cyberpunk Magenta + Violet) */
-:root{
-  --bg-1: #1a001f; /* deep black-violet */
-  --bg-2: #4c007d; /* futuristic purple */
-  --accent: #d100ff; /* neon magenta */
-  --accent-2: #00eaff; /* neon cyan */
+/* Theme tokens */
+:root {
+  --bg-1: #1a001f;      /* deep black-violet */
+  --bg-2: #4c007d;      /* futuristic purple */
+  --accent: #d100ff;    /* neon magenta */
+  --accent-2: #00eaff;  /* neon cyan */
   --muted: rgba(255,255,255,0.06);
 }
 
-/* Basic app background gradient */
-html,body,#__next {
+/* Global body & html */
+html, body, #__next {
   height: 100%;
   background: linear-gradient(180deg, var(--bg-1) 0%, #2a0033 45%, #1b0026 100%);
   color: white;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
-/* Utility for translucent panels */
+/* Page container sits above background */
+.page-container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Container responsive */
+.container-responsive {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+@media(min-width: 640px){ .container-responsive { padding-left: 1.5rem; padding-right: 1.5rem; } }
+@media(min-width: 1024px){ .container-responsive { max-width: 1024px; margin-left: auto; margin-right: auto; } }
+
+/* Panels */
 .panel {
-  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: 0.3s ease;
 }
 
-/* Heading accent underline */
+/* Headings with gradient underline */
 .h-underline {
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   -webkit-background-clip: text;
@@ -33,27 +56,88 @@ html,body,#__next {
   color: transparent;
 }
 
-/* Form styles */
+/* Inputs, textareas, selects */
 input, textarea, select {
+  width: 100%;
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);
   color: #fff;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.25s ease;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 8px var(--accent-2);
+  outline: none;
 }
 
 /* Buttons */
+button, .btn-primary {
+  padding: 14px 22px;
+  font-size: 1.05rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
 .btn-primary {
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  color: #0b0011;
-  font-weight: 700;
+  color: black;
 }
-
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 16px var(--accent-2);
+}
 .btn-ghost {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.08);
   color: white;
 }
+.btn-ghost:hover {
+  background: var(--accent-2);
+  color: black;
+  transform: translateY(-1px);
+}
 
-/* Binary canvas sits behind content */
+/* Nav links */
+.nav-link {
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: 0.25s ease;
+}
+.nav-link:hover {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: black;
+  transform: translateY(-1px);
+}
+
+/* Mobile nav */
+.mobile-nav-link {
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #111111;
+  border: 1px solid #333;
+  transition: 0.2s ease;
+}
+.mobile-nav-link:hover {
+  background-color: var(--accent-2);
+  color: black;
+}
+
+/* Footer links */
+.footer-link {
+  color: #ddd;
+  transition: 0.25s ease;
+}
+.footer-link:hover {
+  color: var(--accent-2);
+}
+
+/* Moving background canvas */
 .canvas-bg {
   position: fixed;
   inset: 0;
@@ -61,19 +145,19 @@ input, textarea, select {
   pointer-events: none;
 }
 
-/* Page container sits above */
-.page-container {
-  position: relative;
-  z-index: 10;
+/* Accessibility focus */
+:focus {
+  outline: 2px solid rgba(209,0,255,0.36);
+  outline-offset: 2px;
 }
 
-/* Responsive spacing */
-.container-responsive {
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* Desktop adjustments */
+@media(min-width: 768px) {
+  input, textarea, select, button {
+    padding: 18px;
+    font-size: 1.1rem;
+  }
+  .panel {
+    border-radius: 16px;
+  }
 }
-@media(min-width: 640px){ .container-responsive { padding-left: 1.5rem; padding-right: 1.5rem; } }
-@media(min-width: 1024px){ .container-responsive { max-width: 1024px; margin-left: auto; margin-right: auto; } }
-
-/* small accessibility tweaks */
-:focus { outline: 2px solid rgba(209,0,255,0.36); outline-offset: 2px; }

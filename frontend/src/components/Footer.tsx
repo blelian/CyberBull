@@ -1,16 +1,15 @@
-import React from "react";
-
 export default function Footer() {
   return (
-    <footer className="mt-12 pb-8 container-responsive">
-      <div className="panel p-4 rounded-lg flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="text-sm">
-          <strong>CyberBull</strong> — built with passion. © {new Date().getFullYear()}
+    <footer className="mt-20 pb-10 text-white">
+      <div className="container-responsive bg-black/40 panel rounded-xl p-10 flex flex-col md:flex-row justify-between items-center gap-6 border border-white/10 shadow-lg">
+        <div className="text-lg">
+          <strong>CyberBull</strong> — Secure. Fast. Intelligent.<br/>
+          © {new Date().getFullYear()} CyberBull Technologies
         </div>
-        <div className="flex gap-4 items-center">
-          <a href="#" className="text-sm btn-ghost px-3 py-1 rounded">Docs</a>
-          <a href="#" className="text-sm btn-ghost px-3 py-1 rounded">Privacy</a>
-          <a href="#" className="text-sm btn-ghost px-3 py-1 rounded">Contact</a>
+        <div className="flex gap-6 text-base">
+          <a href="#" className="footer-link">Docs</a>
+          <a href="#" className="footer-link">Privacy</a>
+          <a href="#" className="footer-link">Contact</a>
         </div>
       </div>
     </footer>

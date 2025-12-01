@@ -22,12 +22,9 @@ export default function ScannerPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ host, ports: ports.length ? ports : undefined }),
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `${res.status}`);
-      }
+      if (!res.ok) throw new Error(await res.text() || `${res.status}`);
       const json = await res.json();
-      setResult(json.result || json);
+      setResult(json.result);
     } catch (err: any) {
       setError(err.message || "Scan failed");
     } finally {
@@ -37,27 +34,25 @@ export default function ScannerPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-bold h-underline">Port Scanner</h1>
-      <p className="text-sm text-white/80">Lightweight port scan via Python FastAPI backend</p>
+      <h1 className="text-3xl font-bold text-cyan-300">Port Scanner</h1>
+      <p className="text-white/70">Lightweight port scan via Python FastAPI backend</p>
 
-      <form onSubmit={handleSubmit} className="panel p-4 rounded-lg flex flex-col gap-4">
-        <input value={host} onChange={(e) => setHost(e.target.value)} placeholder="Host or IP (e.g. example.com)" className="p-2 rounded w-full" required />
-        <input value={portsInput} onChange={(e) => setPortsInput(e.target.value)} placeholder="Ports (comma separated) — optional" className="p-2 rounded w-full" />
+      <form onSubmit={handleSubmit} className="bg-black/30 p-6 rounded-xl flex flex-col gap-5">
+        <input value={host} onChange={(e) => setHost(e.target.value)} placeholder="Host or IP (example.com)" required />
+        <input value={portsInput} onChange={(e) => setPortsInput(e.target.value)} placeholder="Ports (comma separated, optional)" />
 
-        <div className="flex items-center gap-3">
-          <button type="submit" className="btn-primary px-4 py-2 rounded" disabled={loading}>
+        <div className="flex flex-wrap gap-4">
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Scanning..." : "Scan"}
           </button>
-          <button type="button" onClick={() => { setHost(""); setPortsInput(""); setResult(null); setError(null); }} className="btn-ghost px-3 py-2 rounded">
+          <button type="button" className="btn-ghost" onClick={() => { setHost(""); setPortsInput(""); setResult(null); setError(null); }}>
             Reset
           </button>
         </div>
 
-        {error && <div className="text-sm text-red-400">{error}</div>}
-
+        {error && <div className="text-red-400 font-medium">{error}</div>}
         {result && (
-          <div className="mt-2 bg-black/30 p-3 rounded">
-            <div className="text-xs text-white/70 mb-2">Open Ports:</div>
+          <div className="bg-black/20 p-4 rounded-lg break-words">
             <pre className="text-sm">{JSON.stringify(result, null, 2)}</pre>
           </div>
         )}

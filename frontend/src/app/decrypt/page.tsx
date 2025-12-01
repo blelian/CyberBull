@@ -12,6 +12,18 @@ export default function DecryptPage() {
 
   const api = process.env.NEXT_PUBLIC_CPP_BACKEND || "";
 
+  // Handle auto-splitting 3-line paste
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const paste = e.clipboardData.getData("text");
+    const lines = paste.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length >= 3) {
+      setIv(lines[0]);
+      setCiphertext(lines[1]);
+      setTag(lines[2]);
+      e.preventDefault();
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -23,12 +35,9 @@ export default function DecryptPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, iv, ciphertext, tag }),
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `${res.status}`);
-      }
+      if (!res.ok) throw new Error(await res.text() || `${res.status}`);
       const json = await res.json();
-      setResult(json.data ?? JSON.stringify(json));
+      setResult(json.data ?? "");
     } catch (err: any) {
       setError(err.message || "Decryption failed");
     } finally {
@@ -38,31 +47,62 @@ export default function DecryptPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-bold h-underline">Decrypt</h1>
-      <p className="text-sm text-white/80">Provide key + iv/ciphertext/tag (from Encrypt) to decrypt.</p>
+      <h1 className="text-3xl font-bold text-cyan-300">Decrypt</h1>
+      <p className="text-white/70">
+        Paste 3-line encrypted output or enter key + IV / Ciphertext / Tag manually
+      </p>
 
-      <form onSubmit={handleSubmit} className="panel p-4 rounded-lg flex flex-col gap-4">
-        <input value={key} onChange={(e) => setKey(e.target.value)} placeholder="Key" className="p-2 rounded w-full" required />
-        <input value={iv} onChange={(e) => setIv(e.target.value)} placeholder="IV (base64)" className="p-2 rounded w-full" />
-        <input value={ciphertext} onChange={(e) => setCiphertext(e.target.value)} placeholder="Ciphertext (base64)" className="p-2 rounded w-full" />
-        <input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="Tag (base64)" className="p-2 rounded w-full" />
+      <form onSubmit={handleSubmit} className="p-6 rounded-xl flex flex-col gap-5">
+        <input
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder="Key / Passphrase"
+          required
+        />
+        <textarea
+          value={iv}
+          onChange={(e) => setIv(e.target.value)}
+          onPaste={handlePaste}
+          rows={1}
+          placeholder="IV (base64)"
+        />
+        <textarea
+          value={ciphertext}
+          onChange={(e) => setCiphertext(e.target.value)}
+          rows={2}
+          placeholder="Ciphertext (base64)"
+        />
+        <textarea
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          rows={1}
+          placeholder="Tag (base64)"
+        />
 
-        <div className="flex items-center gap-3">
-          <button type="submit" className="btn-primary px-4 py-2 rounded" disabled={loading}>
+        <div className="flex flex-wrap gap-4">
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Decrypting..." : "Decrypt"}
           </button>
-          <button type="button" onClick={() => { setKey(""); setIv(""); setCiphertext(""); setTag(""); setResult(null); setError(null); }} className="btn-ghost px-3 py-2 rounded">
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => {
+              setKey(""); setIv(""); setCiphertext(""); setTag(""); setResult(null); setError(null);
+            }}
+          >
             Reset
           </button>
         </div>
 
-        {error && <div className="text-sm text-red-400">{error}</div>}
+        {error && <div className="text-red-400 font-medium">{error}</div>}
 
         {result && (
-          <div className="mt-2 bg-black/30 p-3 rounded">
-            <div className="text-xs text-white/70 mb-2">Plaintext:</div>
-            <pre className="text-sm whitespace-pre-wrap break-words">{result}</pre>
-          </div>
+          <textarea
+            readOnly
+            value={result}
+            className="w-full h-24 bg-transparent text-sm text-white p-2 rounded resize-none"
+            onFocus={(e) => e.target.select()}
+          />
         )}
       </form>
     </section>

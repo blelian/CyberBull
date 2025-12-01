@@ -11,14 +11,15 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <MovingBackground />
-        <div className="page-container min-h-screen flex flex-col">
+      <body className="relative min-h-screen bg-black text-white">
+        {/* Moving background behind all content */}
+        <MovingBackground className="fixed inset-0 -z-10 pointer-events-none" />
+
+        {/* Main content */}
+        <div className="page-container flex flex-col min-h-screen relative z-10">
           <Navbar />
-          <main className="flex-1 container-responsive pt-6 pb-6">
-            <div className="mx-auto md:max-w-3xl">
-              {children}
-            </div>
+          <main className="flex-1 container-responsive pt-8 pb-12">
+            {children}
           </main>
           <Footer />
         </div>

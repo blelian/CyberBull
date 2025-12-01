@@ -21,10 +21,7 @@ export default function SnifferPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ interface: iface, packet_count: count }),
       });
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || `${res.status}`);
-      }
+      if (!res.ok) throw new Error(await res.text() || `${res.status}`);
       const json = await res.json();
       setPackets(json.packets || []);
     } catch (err: any) {
@@ -36,28 +33,26 @@ export default function SnifferPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-bold h-underline">Packet Sniffer</h1>
-      <p className="text-sm text-white/80">Capture packets from server-side interface (server must permit raw socket access)</p>
+      <h1 className="text-3xl font-bold text-cyan-300">Packet Sniffer</h1>
+      <p className="text-white/70">Capture packets from server-side interface (server must permit raw socket access)</p>
 
-      <form onSubmit={handleSubmit} className="panel p-4 rounded-lg flex flex-col gap-4">
-        <input value={iface} onChange={(e) => setIface(e.target.value)} placeholder="Interface (e.g. eth0)" className="p-2 rounded w-full" required />
-        <input type="number" value={count} onChange={(e) => setCount(Number(e.target.value))} min={1} max={1000} className="p-2 rounded w-full" />
+      <form onSubmit={handleSubmit} className="bg-black/30 p-6 rounded-xl flex flex-col gap-5">
+        <input value={iface} onChange={(e) => setIface(e.target.value)} placeholder="Interface (e.g. eth0)" required />
+        <input type="number" value={count} onChange={(e) => setCount(Number(e.target.value))} min={1} max={1000} />
 
-        <div className="flex items-center gap-3">
-          <button type="submit" className="btn-primary px-4 py-2 rounded" disabled={loading}>
+        <div className="flex flex-wrap gap-4">
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Sniffing..." : "Sniff"}
           </button>
-          <button type="button" onClick={() => { setIface(""); setCount(10); setPackets([]); setError(null); }} className="btn-ghost px-3 py-2 rounded">
+          <button type="button" className="btn-ghost" onClick={() => { setIface(""); setCount(10); setPackets([]); setError(null); }}>
             Reset
           </button>
         </div>
 
-        {error && <div className="text-sm text-red-400">{error}</div>}
-
+        {error && <div className="text-red-400 font-medium">{error}</div>}
         {packets.length > 0 && (
-          <div className="mt-2 bg-black/30 p-3 rounded">
-            <div className="text-xs text-white/70 mb-2">Captured Packets:</div>
-            <pre className="text-sm whitespace-pre-wrap">{JSON.stringify(packets, null, 2)}</pre>
+          <div className="bg-black/20 p-4 rounded-lg break-words">
+            <pre className="text-sm">{JSON.stringify(packets, null, 2)}</pre>
           </div>
         )}
       </form>
