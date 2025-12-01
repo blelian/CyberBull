@@ -13,11 +13,12 @@ CPP_BACKEND_URL = os.getenv("CPP_BACKEND_URL", "*")
 
 # CORS SETTINGS
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[FRONTEND_URL, CPP_BACKEND_URL, "*"],  # allow all for safety now
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    CORSMiddleware(
+        allow_origins=[FRONTEND_URL, CPP_BACKEND_URL, "*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 )
 
 class ScanRequest(BaseModel):
