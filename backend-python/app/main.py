@@ -8,13 +8,26 @@ import os
 app = FastAPI(title="CyberBull Python Scanner & Sniffer")
 
 # FRONTEND + CPP BACKEND URLS
-FRONTEND_URL = os.getenv("FRONTEND_URL", "*")
-CPP_BACKEND_URL = os.getenv("CPP_BACKEND_URL", "*")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+CPP_BACKEND_URL = os.getenv("CPP_BACKEND_URL")
+
+# Build dynamic allowed origins list
+allowed_origins = []
+
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+
+if CPP_BACKEND_URL:
+    allowed_origins.append(CPP_BACKEND_URL)
+
+# If no env variables set → allow all (development mode)
+if not allowed_origins:
+    allowed_origins = ["*"]
 
 # CORS SETTINGS
 app.add_middleware(
     CORSMiddleware(
-        allow_origins=[FRONTEND_URL, CPP_BACKEND_URL, "*"],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -41,7 +54,7 @@ def scan(request: ScanRequest):
         result = scan_ports(request.host, request.ports)
         return {"result": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Scan failed: {e}")
 
 
 @app.post("/sniff")
@@ -50,4 +63,4 @@ def sniff(request: SniffRequest):
         packets = sniff_packets(request.interface, request.packet_count)
         return {"packets": packets}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Sniff failed: {e}")

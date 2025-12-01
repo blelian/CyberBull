@@ -6,7 +6,7 @@ interface MovingBackgroundProps {
 }
 
 /**
- * Very calm binary rain background.
+ * Sparse white snowfall on your exact site gradient (var(--bg-1) → #2a0033 → #1b0026)
  */
 export default function MovingBackground({ className }: MovingBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -18,43 +18,62 @@ export default function MovingBackground({ className }: MovingBackgroundProps) {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const fontSize = Math.max(12, Math.floor(width / 140));
-    const columns = Math.floor(width / fontSize);
-    const drops = new Array(columns).fill(0); // vertical position per column
+    /** 
+     * EXACT SITE GRADIENT  
+     * matches:
+     * background: linear-gradient(180deg, var(--bg-1) 0%, #2a0033 45%, #1b0026 100%);
+     */
+    function createGradient() {
+      const grad = ctx.createLinearGradient(0, 0, 0, height);
+      grad.addColorStop(0, "rgb(26,0,31)");       // var(--bg-1)
+      grad.addColorStop(0.45, "#2a0033");         // mid-purple
+      grad.addColorStop(1, "#1b0026");            // deep purple bottom
+      return grad;
+    }
+    let gradient = createGradient();
 
-    const chars = ["0", "1"];
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "rgba(209,0,255,0.2)"); // magenta
-    gradient.addColorStop(0.5, "rgba(0,234,255,0.15)"); // cyan
-    gradient.addColorStop(1, "rgba(255,255,255,0.05)");
+    // Snowflake particles
+    const particlesCount = Math.floor(width / 50);
+    const particles = Array.from({ length: particlesCount }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: Math.random() * 2 + 1,
+      speedY: Math.random() * 0.3 + 0.1,
+      speedX: Math.random() * 0.2 - 0.1
+    }));
 
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      gradient = createGradient();
     }
     window.addEventListener("resize", resize);
 
     function draw() {
-      // fade layer more gently
-      ctx.fillStyle = "rgba(0,0,0,0.05)";
+      // Background (exact gradient)
+      ctx.fillStyle = gradient as unknown as string;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.fillStyle = gradient as unknown as string;
-      ctx.font = `${fontSize}px monospace`;
+      // Snow
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = 1;
 
-      for (let i = 0; i < drops.length; i++) {
-        const text = chars[Math.floor(Math.random() * chars.length)];
-        ctx.shadowColor = "rgba(209,0,255,0.2)";
-        ctx.shadowBlur = 4;
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      particles.forEach((p) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
 
-        // much slower fall
-        drops[i] += Math.random() * 0.2 + 0.1;
+        p.y += p.speedY;
+        p.x += p.speedX;
 
-        if (drops[i] * fontSize > height || Math.random() > 0.998) {
-          drops[i] = 0;
+        if (p.y > height) {
+          p.y = 0;
+          p.x = Math.random() * width;
         }
-      }
+        if (p.x > width) p.x = 0;
+        if (p.x < 0) p.x = width;
+      });
 
       rafRef.current = requestAnimationFrame(draw);
     }
