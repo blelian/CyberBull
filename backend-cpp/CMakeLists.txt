@@ -8,7 +8,10 @@ add_executable(cyberbull-cpp
     src/main.cpp
     src/encrypt.cpp
     src/decrypt.cpp
+    src/util.cpp
 )
 
 target_include_directories(cyberbull-cpp PRIVATE src)
-# no external link libraries required for cpp-httplib single header
+
+find_package(OpenSSL REQUIRED)
+target_link_libraries(cyberbull-cpp PRIVATE OpenSSL::Crypto OpenSSL::SSL)

@@ -1,7 +1,9 @@
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y \
-    build-essential cmake libssl-dev git curl \
+    build-essential cmake libssl-dev git curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -10,7 +12,8 @@ WORKDIR /app
 COPY . .
 
 # Download single-header HTTP library for build (cpp-httplib)
-RUN curl -L https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h -o src/httplib.h
+RUN curl -fsSL https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h -o src/httplib.h \
+ && curl -fsSL https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp -o src/json.hpp
 
 RUN mkdir -p build && cd build && cmake .. && make
 
