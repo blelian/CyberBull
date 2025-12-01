@@ -13,10 +13,8 @@ CPP_BACKEND_URL = os.getenv("CPP_BACKEND_URL")
 
 # Build dynamic allowed origins list
 allowed_origins = []
-
 if FRONTEND_URL:
     allowed_origins.append(FRONTEND_URL)
-
 if CPP_BACKEND_URL:
     allowed_origins.append(CPP_BACKEND_URL)
 
@@ -24,14 +22,13 @@ if CPP_BACKEND_URL:
 if not allowed_origins:
     allowed_origins = ["*"]
 
-# CORS SETTINGS
+# ✅ Correct CORS setup
 app.add_middleware(
-    CORSMiddleware(
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class ScanRequest(BaseModel):
