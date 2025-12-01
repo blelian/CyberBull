@@ -10,6 +10,28 @@ export default function ScannerPage() {
 
   const api = process.env.NEXT_PUBLIC_PY_BACKEND || "";
 
+  // Extract hostname from any URL or IP
+  function normalizeHost(input: string): string {
+    let clean = input.trim().replace(/^Host:\s*/i, "");
+
+    // Try URL parsing
+    try {
+      if (clean.startsWith("http://") || clean.startsWith("https://")) {
+        const url = new URL(clean);
+        return url.hostname;
+      }
+    } catch {
+      /* ignore, fallback */
+    }
+
+    // Remove trailing slash or paths
+    clean = clean.replace(/https?:\/\//, "");
+    clean = clean.split("/")[0];
+    clean = clean.trim();
+
+    return clean;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -17,28 +39,21 @@ export default function ScannerPage() {
     setLoading(true);
 
     try {
-      // --- CLEAN HOST ---
-      const cleanHost = host.trim().replace(/^Host:\s*/i, "");
+      const cleanHost = normalizeHost(host);
 
-      if (!cleanHost) {
-        throw new Error("Invalid host.");
+      if (!cleanHost) throw new Error("Invalid host.");
+
+      // Ports
+      if (portsInput.includes("-") || portsInput.includes("–")) {
+        throw new Error(
+          "Port ranges are not supported. Use: 22,80,443"
+        );
       }
 
-      // --- PARSE PORT INPUT ---
-      let ports: number[] = [];
-
-      if (portsInput.trim() !== "") {
-        if (portsInput.includes("-") || portsInput.includes("–")) {
-          throw new Error(
-            "Port ranges (20-80) are not supported. Use comma separated ports: 22,80,443"
-          );
-        }
-
-        ports = portsInput
-          .split(",")
-          .map((s) => parseInt(s.trim()))
-          .filter((n) => !isNaN(n) && n > 0 && n <= 65535);
-      }
+      const ports = portsInput
+        .split(",")
+        .map((s) => parseInt(s.trim()))
+        .filter((n) => !isNaN(n) && n > 0 && n <= 65535);
 
       const res = await fetch(`${api}/scan`, {
         method: "POST",
@@ -49,14 +64,12 @@ export default function ScannerPage() {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error((await res.text()) || `HTTP ${res.status}`);
-      }
+      if (!res.ok) throw new Error(await res.text());
 
       const json = await res.json();
       setResult(json.result);
     } catch (err: any) {
-      setError(err.message || "Scan failed");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -74,23 +87,20 @@ export default function ScannerPage() {
         <input
           value={host}
           onChange={(e) => setHost(e.target.value)}
-          placeholder="Host or IP (example.com)"
+          placeholder="Host, IP or URL"
           required
-          className="input"
         />
 
         <input
           value={portsInput}
           onChange={(e) => setPortsInput(e.target.value)}
-          placeholder="Ports (comma separated: 22,80,443)"
-          className="input"
+          placeholder="Ports (comma separated)"
         />
 
-        <div className="flex flex-wrap gap-4">
-          <button type="submit" className="btn-primary" disabled={loading}>
+        <div className="flex gap-4">
+          <button className="btn-primary" disabled={loading}>
             {loading ? "Scanning..." : "Scan"}
           </button>
-
           <button
             type="button"
             className="btn-ghost"
@@ -105,10 +115,9 @@ export default function ScannerPage() {
           </button>
         </div>
 
-        {error && <div className="text-red-400 font-medium">{error}</div>}
-
+        {error && <div className="text-red-400">{error}</div>}
         {result && (
-          <div className="bg-black/20 p-4 rounded-lg break-words">
+          <div className="bg-black/20 p-4 rounded-lg">
             <pre className="text-sm">{JSON.stringify(result, null, 2)}</pre>
           </div>
         )}
