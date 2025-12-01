@@ -10,25 +10,25 @@ export default function ScannerPage() {
 
   const api = process.env.NEXT_PUBLIC_PY_BACKEND || "";
 
+  const PRESETS: { [label: string]: string } = {
+    "Web Server": "80,443",
+    "SSH Server": "22",
+    "Database": "3306,5432,27017,6379",
+    "Windows Server": "3389,445",
+    "Custom": "",
+  };
+
   // Extract hostname from any URL or IP
   function normalizeHost(input: string): string {
     let clean = input.trim().replace(/^Host:\s*/i, "");
-
-    // Try URL parsing
     try {
       if (clean.startsWith("http://") || clean.startsWith("https://")) {
         const url = new URL(clean);
         return url.hostname;
       }
-    } catch {
-      /* ignore, fallback */
-    }
-
-    // Remove trailing slash or paths
+    } catch {}
     clean = clean.replace(/https?:\/\//, "");
-    clean = clean.split("/")[0];
-    clean = clean.trim();
-
+    clean = clean.split("/")[0].trim();
     return clean;
   }
 
@@ -40,15 +40,7 @@ export default function ScannerPage() {
 
     try {
       const cleanHost = normalizeHost(host);
-
       if (!cleanHost) throw new Error("Invalid host.");
-
-      // Ports
-      if (portsInput.includes("-") || portsInput.includes("–")) {
-        throw new Error(
-          "Port ranges are not supported. Use: 22,80,443"
-        );
-      }
 
       const ports = portsInput
         .split(",")
@@ -65,7 +57,6 @@ export default function ScannerPage() {
       });
 
       if (!res.ok) throw new Error(await res.text());
-
       const json = await res.json();
       setResult(json.result);
     } catch (err: any) {
@@ -78,12 +69,9 @@ export default function ScannerPage() {
   return (
     <section className="space-y-6">
       <h1 className="text-3xl font-bold text-cyan-300">Port Scanner</h1>
-      <p className="text-white/70">Lightweight port scan via Python FastAPI backend</p>
+      <p className="text-white/70">Scan common ports easily using presets or custom ports</p>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-black/30 p-6 rounded-xl flex flex-col gap-5"
-      >
+      <form onSubmit={handleSubmit} className="bg-black/30 p-6 rounded-xl flex flex-col gap-5">
         <input
           value={host}
           onChange={(e) => setHost(e.target.value)}
@@ -91,14 +79,27 @@ export default function ScannerPage() {
           required
         />
 
+        <div className="flex gap-2 flex-wrap items-center">
+          {Object.keys(PRESETS).map((label) => (
+            <button
+              key={label}
+              type="button"
+              className={`btn-ghost ${PRESETS[label] === portsInput ? "bg-cyan-500/20" : ""}`}
+              onClick={() => setPortsInput(PRESETS[label])}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <input
           value={portsInput}
           onChange={(e) => setPortsInput(e.target.value)}
-          placeholder="Ports (comma separated)"
+          placeholder="Ports (comma separated, optional)"
         />
 
         <div className="flex gap-4">
-          <button className="btn-primary" disabled={loading}>
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? "Scanning..." : "Scan"}
           </button>
           <button
