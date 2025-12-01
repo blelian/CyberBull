@@ -10,9 +10,9 @@ export default function DecryptPage() {
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const api = process.env.NEXT_PUBLIC_CPP_BACKEND || "";
+  const api = process.env.NEXT_PUBLIC_CPP_BACKEND;
+  if (!api) console.error("NEXT_PUBLIC_CPP_BACKEND not set!");
 
-  // Handle auto-splitting 3-line paste
   function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
     const paste = e.clipboardData.getData("text");
     const lines = paste.split("\n").map(l => l.trim()).filter(Boolean);
@@ -29,16 +29,34 @@ export default function DecryptPage() {
     setError(null);
     setResult(null);
     setLoading(true);
+
+    if (!api) {
+      setError("Backend API URL not configured.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch(`${api}/decrypt`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, iv, ciphertext, tag }),
+        body: JSON.stringify({
+          key: key.trim(),
+          iv: iv.trim(),
+          ciphertext: ciphertext.trim(),
+          tag: tag.trim(),
+        }),
       });
-      if (!res.ok) throw new Error(await res.text() || `${res.status}`);
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Status ${res.status}`);
+      }
+
       const json = await res.json();
       setResult(json.data ?? "");
     } catch (err: any) {
+      console.error("Decrypt error:", err);
       setError(err.message || "Decryption failed");
     } finally {
       setLoading(false);
@@ -87,7 +105,12 @@ export default function DecryptPage() {
             type="button"
             className="btn-ghost"
             onClick={() => {
-              setKey(""); setIv(""); setCiphertext(""); setTag(""); setResult(null); setError(null);
+              setKey("");
+              setIv("");
+              setCiphertext("");
+              setTag("");
+              setResult(null);
+              setError(null);
             }}
           >
             Reset
