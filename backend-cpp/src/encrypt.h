@@ -3,6 +3,6 @@
 
 #include <string>
 
-bool encryptFile(const std::string& filename, const std::string& key);
+bool encryptString(const std::string &input, const std::string &key, std::string &out);
 
-#endif
+#endif // ENCRYPT_H

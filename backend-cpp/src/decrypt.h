@@ -3,6 +3,6 @@
 
 #include <string>
 
-bool decryptFile(const std::string& filename, const std::string& key);
+bool decryptString(const std::string &input, const std::string &key, std::string &out);
 
-#endif
+#endif // DECRYPT_H

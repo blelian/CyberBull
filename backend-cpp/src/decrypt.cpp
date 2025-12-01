@@ -1,27 +1,11 @@
 #include "decrypt.h"
-#include <fstream>
-#include <iostream>
 
-bool decryptFile(const std::string& filename, const std::string& key) {
-    std::ifstream inFile(filename, std::ios::binary);
-    if (!inFile) return false;
-
-    std::string outFilename = filename;
-    if (outFilename.size() > 4 && outFilename.substr(outFilename.size() - 4) == ".enc") {
-        outFilename = outFilename.substr(0, outFilename.size() - 4);
-    } else {
-        outFilename += ".dec";
+bool decryptString(const std::string &input, const std::string &key, std::string &out) {
+    // XOR is symmetric, so decrypt is same as encrypt
+    if (key.empty()) return false;
+    out.resize(input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        out[i] = input[i] ^ key[i % key.size()];
     }
-
-    std::ofstream outFile(outFilename, std::ios::binary);
-    if (!outFile) return false;
-
-    char c;
-    size_t i = 0;
-    while (inFile.get(c)) {
-        outFile.put(c ^ key[i % key.size()]);
-        i++;
-    }
-
     return true;
 }
