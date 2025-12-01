@@ -1,24 +1,37 @@
 import socket
+from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import List
 
-# Safe list of common TCP ports
-COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 443, 3389]
+app = FastAPI()
 
-def scan_ports(host: str, ports: list[int] | None = None) -> dict:
-    """
-    SAFE TCP connect scan.
-    No SYN, no raw sockets → legal everywhere.
-    """
-    if ports is None:
-        ports = COMMON_PORTS
+class ScanRequest(BaseModel):
+    host: str
+    start_port: int
+    end_port: int
 
-    open_ports = []
+def is_port_open(host: str, port: int) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=1.0):
+            return True
+    except:
+        return False
 
-    for port in ports:
-        try:
-            # Attempt normal TCP connection
-            with socket.create_connection((host, port), timeout=0.5):
-                open_ports.append(port)
-        except Exception:
-            continue
+@app.post("/scan")
+def scan_ports(data: ScanRequest):
+    host = data.host.strip()
+    start_p = max(1, data.start_port)
+    end_p = min(65535, data.end_port)
 
-    return {"host": host, "open_ports": open_ports}
+    open_ports: List[int] = []
+
+    for port in range(start_p, end_p + 1):
+        if is_port_open(host, port):
+            open_ports.append(port)
+
+    return {
+        "host": host,
+        "start_port": start_p,
+        "end_port": end_p,
+        "open_ports": open_ports
+    }
