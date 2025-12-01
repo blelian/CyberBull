@@ -1,0 +1,28 @@
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/package-lock.json
+frontend/.env.local
+
+# Python
+backend-python/__pycache__/
+backend-python/venv/
+backend-python/*.pyc
+backend-python/.env
+
+# C++
+backend-cpp/build/
+backend-cpp/*.o
+backend-cpp/*.exe
+backend-cpp/*.out
+backend-cpp/*.obj
+backend-cpp/CMakeFiles/
+backend-cpp/CMakeCache.txt
+backend-cpp/Makefile
+backend-cpp/*.log
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+*.log
