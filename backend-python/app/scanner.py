@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
+import random
 
 app = FastAPI()
 
@@ -10,22 +11,7 @@ class ScanRequest(BaseModel):
     start_port: int
     end_port: int
 
-# Detect if running on Render
 ON_RENDER = os.environ.get("RENDER", None) is not None
-
-def is_port_open(host: str, port: int) -> bool:
-    if ON_RENDER:
-        # Simulate results on Render
-        # Pretend some common ports are open
-        return port in [22, 80, 443]
-    else:
-        # Real scan locally or on a VM
-        import socket
-        try:
-            with socket.create_connection((host, port), timeout=1.0):
-                return True
-        except:
-            return False
 
 @app.post("/scan")
 def scan_ports(data: ScanRequest):
@@ -33,11 +19,21 @@ def scan_ports(data: ScanRequest):
     start_p = max(1, data.start_port)
     end_p = min(65535, data.end_port)
 
-    open_ports: List[int] = []
-
-    for port in range(start_p, end_p + 1):
-        if is_port_open(host, port):
-            open_ports.append(port)
+    if ON_RENDER:
+        # Fully simulated scan — random subset of ports
+        all_ports = list(range(start_p, end_p + 1))
+        open_ports = random.sample(all_ports, min(len(all_ports), 5))  # max 5 open ports
+        open_ports.sort()
+    else:
+        # Real scan locally
+        import socket
+        open_ports = []
+        for port in range(start_p, end_p + 1):
+            try:
+                with socket.create_connection((host, port), timeout=1.0):
+                    open_ports.append(port)
+            except:
+                continue
 
     return {
         "host": host,
