@@ -161,3 +161,23 @@ button, .btn-primary {
     border-radius: 16px;
   }
 }
+
+/* =============================== */
+/* NETWORK NODES ANIMATION KEYFRAMES */
+/* =============================== */
+@keyframes float {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-48%, -52%) scale(1.1); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.animate-float {
+  animation: float 4s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
