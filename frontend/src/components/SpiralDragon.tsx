@@ -30,21 +30,21 @@ export default function SpiralDragon({ className }: SpiralDragonProps) {
     for (let i = 0; i < num; i++) {
       particles.push({
         angle: Math.random() * 2 * Math.PI,
-        radius: Math.random() * 50 + 50,
+        radius: Math.random() * 50 + 50, // fixed distance from center
         speed: 0.01 + Math.random() * 0.02,
         color: colors[Math.floor(Math.random() * colors.length)],
       });
     }
 
     const draw = () => {
-      ctx.clearRect(0, 0, width, height); // clear canvas instead of filling background
+      ctx.clearRect(0, 0, width, height); // clear canvas each frame
 
       const cx = width / 2;
       const cy = height / 2;
 
       particles.forEach((p) => {
         p.angle += p.speed;
-        p.radius += 0.1; // spiral outwards
+        // p.radius += 0.1; // removed so spiral stays centered
         const x = cx + Math.cos(p.angle) * p.radius;
         const y = cy + Math.sin(p.angle) * p.radius;
 
