@@ -6,10 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# CORS — allow frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # or put your frontend URL here
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -17,23 +16,18 @@ app.add_middleware(
 
 class ScanRequest(BaseModel):
     host: str
-    start_port: int
-    end_port: int
+    ports: List[int]
 
 @app.post("/scan")
 def scan_ports(data: ScanRequest):
     host = data.host.strip()
-    start_p = max(1, data.start_port)
-    end_p = min(65535, data.end_port)
+    ports = [p for p in data.ports if 1 <= p <= 65535]
 
-    # Simulate a few open ports
-    possible_ports = list(range(start_p, end_p + 1))
-    num_open = min(5, len(possible_ports))
-    open_ports = sorted(random.sample(possible_ports, num_open))
+    # Simulate open ports
+    num_open = min(5, len(ports))
+    open_ports = sorted(random.sample(ports, num_open)) if ports else []
 
     return {
         "host": host,
-        "start_port": start_p,
-        "end_port": end_p,
         "open_ports": open_ports
     }
