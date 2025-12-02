@@ -1,37 +1,24 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List
+# app/scanner.py
+
 import random
 
-app = FastAPI()
+def scan_ports(host: str, ports: list[int] | None):
+    if not host:
+        raise ValueError("Host is required")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    # If no ports provided → use common ports
+    if not ports:
+        ports = [80, 443, 22, 8080, 3306]
 
-class ScanRequest(BaseModel):
-    host: str
-    ports: List[int]
+    # Clean port list
+    ports = [p for p in ports if 1 <= p <= 65535]
 
-@app.post("/scan")
-async def scan_ports(request: ScanRequest):
-    host = request.host.strip()
-    ports = [p for p in request.ports if 1 <= p <= 65535]
-
-    # Simulated open ports
-    open_ports = []
-    if ports:
-        count = min(5, len(ports))
-        open_ports = sorted(random.sample(ports, count))
+    # Simulate open ports (max 5 randomly)
+    num_open = min(5, len(ports))
+    open_ports = sorted(random.sample(ports, num_open)) if ports else []
 
     return {
-        "result": {
-            "host": host,
-            "open_ports": open_ports
-        }
+        "host": host,
+        "scanned_ports": ports,
+        "open_ports": open_ports
     }
