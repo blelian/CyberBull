@@ -8,28 +8,39 @@
 
 using json = nlohmann::json;
 
+/**
+ * Encrypts a plaintext string using AES-256-GCM.
+ * Key is derived from the passphrase using SHA-256.
+ * Returns a JSON string containing Base64-encoded "iv", "ciphertext", and "tag".
+ * @param plaintext The string to encrypt.
+ * @param passphrase The passphrase used to derive the encryption key.
+ * @return JSON string with encryption result, or empty string on failure.
+ */
 std::string encryptString(const std::string &plaintext, const std::string &passphrase) {
     if (passphrase.empty()) return "";
 
     try {
-        // Derive 256-bit key by SHA-256(passphrase)
+        // Derive 256-bit key from passphrase using SHA-256
         std::vector<unsigned char> key = sha256(passphrase);
 
-        // Generate 12-byte IV for GCM
+        // Generate 12-byte random IV for AES-GCM
         std::vector<unsigned char> iv = randomBytes(12);
 
+        // Create encryption context
         EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
         if (!ctx) return "";
 
         int rc = EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
         if (rc != 1) { EVP_CIPHER_CTX_free(ctx); return ""; }
 
-        // set IV length (12 is default but set explicitly)
+        // Explicitly set IV length
         EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, static_cast<int>(iv.size()), NULL);
 
+        // Initialize encryption with key and IV
         rc = EVP_EncryptInit_ex(ctx, NULL, NULL, key.data(), iv.data());
         if (rc != 1) { EVP_CIPHER_CTX_free(ctx); return ""; }
 
+        // Encrypt plaintext
         std::vector<unsigned char> ciphertext(plaintext.size() + EVP_CIPHER_block_size(EVP_aes_256_gcm()));
         int outlen = 0;
         rc = EVP_EncryptUpdate(ctx,
@@ -44,11 +55,13 @@ std::string encryptString(const std::string &plaintext, const std::string &passp
         total_len += outlen;
         ciphertext.resize(total_len);
 
+        // Retrieve authentication tag
         std::vector<unsigned char> tag(16);
         EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, static_cast<int>(tag.size()), tag.data());
 
         EVP_CIPHER_CTX_free(ctx);
 
+        // Construct JSON output with Base64-encoded fields
         json j;
         j["iv"] = base64Encode(iv);
         j["ciphertext"] = base64Encode(ciphertext);

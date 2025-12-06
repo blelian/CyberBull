@@ -9,28 +9,38 @@
 using json = nlohmann::json;
 using namespace httplib;
 
-static const size_t MAX_BODY = 1 * 1024 * 1024; // 1 MB
+// Maximum request body size: 1 MB
+static const size_t MAX_BODY = 1 * 1024 * 1024;
 
-// Add CORS headers to every response
+/**
+ * Adds CORS headers to a response to allow cross-origin requests.
+ * @param res The HTTP response object to modify.
+ */
 void add_cors(Response &res) {
     res.set_header("Access-Control-Allow-Origin", "*");
     res.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
     res.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
+/**
+ * Main entry point of the CyberBull C++ server.
+ * Sets up an HTTP server with /encrypt and /decrypt endpoints.
+ * Handles CORS, JSON parsing, and calls encryption/decryption functions.
+ */
 int main() {
     Server svr;
 
-    // Handle CORS preflight
+    // Handle CORS preflight requests for all routes
     svr.Options(R"(.*)", [](const Request&, Response& res) {
         add_cors(res);
         res.status = 200;
     });
 
-    // POST /encrypt
+    // POST /encrypt endpoint
     svr.Post("/encrypt", [](const Request& req, Response& res) {
         add_cors(res);
 
+        // Reject payloads larger than MAX_BODY
         if (req.body.size() > MAX_BODY) {
             res.status = 413;
             res.set_content("Payload too large", "text/plain");
@@ -39,6 +49,8 @@ int main() {
 
         try {
             auto j = json::parse(req.body);
+
+            // Validate required fields
             if (!j.contains("key") || !j.contains("data")) {
                 res.status = 400;
                 res.set_content("Bad JSON format", "text/plain");
@@ -48,6 +60,7 @@ int main() {
             std::string key = j["key"];
             std::string data = j["data"];
 
+            // Perform encryption
             std::string out = encryptString(data, key);
             if (out.empty()) {
                 res.status = 500;
@@ -62,7 +75,7 @@ int main() {
         }
     });
 
-    // POST /decrypt
+    // POST /decrypt endpoint
     svr.Post("/decrypt", [](const Request& req, Response& res) {
         add_cors(res);
 
@@ -75,6 +88,7 @@ int main() {
         try {
             auto j = json::parse(req.body);
 
+            // Validate key field
             if (!j.contains("key")) {
                 res.status = 400;
                 res.set_content("Missing key", "text/plain");
@@ -82,11 +96,13 @@ int main() {
             }
 
             std::string key = j["key"];
-
             std::string payloadJson;
+
+            // Check if full payload JSON is provided
             if (j.contains("payload")) {
                 payloadJson = j["payload"].dump();
             } else {
+                // Otherwise construct JSON from iv/ciphertext/tag fields
                 if (!(j.contains("iv") && j.contains("ciphertext") && j.contains("tag"))) {
                     res.status = 400;
                     res.set_content("Missing ciphertext fields", "text/plain");
@@ -99,6 +115,7 @@ int main() {
                 payloadJson = sub.dump();
             }
 
+            // Perform decryption
             std::string plaintext = decryptString(payloadJson, key);
             if (plaintext.empty()) {
                 res.status = 400;
@@ -106,6 +123,7 @@ int main() {
                 return;
             }
 
+            // Return decrypted data as JSON
             json out;
             out["data"] = plaintext;
             res.set_content(out.dump(), "application/json");
@@ -116,7 +134,7 @@ int main() {
         }
     });
 
-    // Use Render dynamic port
+    // Determine server port (Render dynamic port or default 8080)
     int port = 8080;
     if (const char* env_port = std::getenv("PORT")) {
         try {
@@ -128,5 +146,6 @@ int main() {
 
     std::cout << "CyberBull C++ server running on port " << port << "\n";
     svr.listen("0.0.0.0", port);
+
     return 0;
 }
