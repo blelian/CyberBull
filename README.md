@@ -184,7 +184,7 @@ API-ready with CORS and proper error handling
 
 Links
 
-Video demo: https://youtu.be/HVTvnvKdvBI
+Video demo: https://youtu.be/ePikpIm6tCE
 
 GitHub repository: https://github.com/blelian/CyberBull.git
 
